@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "  I",
+    " M ",
+    "B  "
+  ],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "M": { "item": "minecraft:magma_cream" },
+    "B": { "item": "minecraft:blaze_rod" }
+  },
+  "result": { "item": "sunbreathing:nichirin_blade" }
+}

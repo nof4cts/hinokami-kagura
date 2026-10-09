@@ -1,0 +1,120 @@
+{
+  "form.dance.swing": {
+    "subtitle": "subtitles.sunbreathing.form.dance.swing",
+    "sounds": [
+      "sunbreathing:form/dance_swing1",
+      "sunbreathing:form/dance_swing2"
+    ]
+  },
+  "flame.ignite": {
+    "subtitle": "subtitles.sunbreathing.flame.ignite",
+    "sounds": [
+      "sunbreathing:flame/ignite1",
+      "sunbreathing:flame/ignite2"
+    ]
+  },
+  "flame.crackle": {
+    "subtitle": "subtitles.sunbreathing.flame.crackle",
+    "sounds": [
+      "sunbreathing:flame/crackle1",
+      "sunbreathing:flame/crackle2",
+      "sunbreathing:flame/crackle3"
+    ]
+  },
+  "impact.slash": {
+    "subtitle": "subtitles.sunbreathing.impact.slash",
+    "sounds": [
+      "sunbreathing:impact/slash_hit1",
+      "sunbreathing:impact/slash_hit2",
+      "sunbreathing:impact/slash_hit3"
+    ]
+  },
+  "impact.sub": {
+    "subtitle": "subtitles.sunbreathing.impact.sub",
+    "sounds": [
+      "sunbreathing:impact/sub_hit1",
+      "sunbreathing:impact/sub_hit2"
+    ]
+  },
+  "blade.ignite": {
+    "subtitle": "subtitles.sunbreathing.blade.ignite",
+    "sounds": [
+      "sunbreathing:blade/ignite"
+    ]
+  },
+  "breath.loop": {
+    "subtitle": "subtitles.sunbreathing.breath.loop",
+    "sounds": [
+      {
+        "name": "sunbreathing:breath/concentration_loop",
+        "stream": false
+      }
+    ]
+  },
+  "breath.inhale": {
+    "subtitle": "subtitles.sunbreathing.breath.inhale",
+    "sounds": [
+      "sunbreathing:breath/inhale"
+    ]
+  },
+  "breath.exhale": {
+    "subtitle": "subtitles.sunbreathing.breath.exhale",
+    "sounds": [
+      "sunbreathing:breath/exhale"
+    ]
+  },
+  "breath.fail": {
+    "subtitle": "subtitles.sunbreathing.breath.fail",
+    "sounds": [
+      "sunbreathing:breath/fail"
+    ]
+  },
+  "ui.open": {
+    "subtitle": "subtitles.sunbreathing.ui.open",
+    "sounds": [
+      "sunbreathing:ui/wheel_open"
+    ]
+  },
+  "ui.select": {
+    "subtitle": "subtitles.sunbreathing.ui.select",
+    "sounds": [
+      "sunbreathing:ui/select"
+    ]
+  },
+  "form.swing.heavy": {
+    "subtitle": "subtitles.sunbreathing.form.swing.heavy",
+    "sounds": [
+      "sunbreathing:form/swing_heavy"
+    ]
+  },
+  "form.spin": {
+    "subtitle": "subtitles.sunbreathing.form.spin",
+    "sounds": [
+      "sunbreathing:form/spin"
+    ]
+  },
+  "form.thrust": {
+    "subtitle": "subtitles.sunbreathing.form.thrust",
+    "sounds": [
+      "sunbreathing:form/thrust"
+    ]
+  },
+  "form.dash": {
+    "subtitle": "subtitles.sunbreathing.form.dash",
+    "sounds": [
+      "sunbreathing:form/dash"
+    ]
+  },
+  "form.radiance": {
+    "subtitle": "subtitles.sunbreathing.form.radiance",
+    "sounds": [
+      "sunbreathing:form/radiance"
+    ]
+  },
+  "form.finale": {
+    "subtitle": "subtitles.sunbreathing.form.finale",
+    "sounds": [
+      "sunbreathing:form/finale"
+    ]
+  }
+}
