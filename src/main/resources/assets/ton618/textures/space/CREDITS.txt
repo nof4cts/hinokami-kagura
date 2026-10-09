@@ -1,0 +1,10 @@
+Earth textures, repacked for the orbit shader (RGB + an extra channel in alpha)
+
+earth_day_clouds.png
+    RGB: NASA Blue Marble (NASA Earth Observatory / Visible Earth), public domain.
+    A:   NASA Blue Marble cloud layer, public domain.
+    Source files via the three.js project (examples/textures/planets), MIT licence.
+earth_night_ocean.png
+    RGB: NASA Earth Observatory "Earth at Night" city lights, public domain.
+    A:   ocean/specular mask derived from NASA Blue Marble, public domain.
+    Source files via the three.js project (examples/textures/planets), MIT licence.

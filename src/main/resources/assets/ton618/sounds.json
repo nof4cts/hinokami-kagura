@@ -1,0 +1,83 @@
+{
+  "remote.lock": {
+    "subtitle": "subtitles.ton618.remote.lock",
+    "sounds": [
+      "ton618:remote/lock"
+    ]
+  },
+  "remote.arm": {
+    "subtitle": "subtitles.ton618.remote.arm",
+    "sounds": [
+      "ton618:remote/arm"
+    ]
+  },
+  "remote.deny": {
+    "subtitle": "subtitles.ton618.remote.deny",
+    "sounds": [
+      "ton618:remote/deny"
+    ]
+  },
+  "remote.beep": {
+    "subtitle": "subtitles.ton618.remote.beep",
+    "sounds": [
+      "ton618:remote/beep"
+    ]
+  },
+  "cannon.charge": {
+    "subtitle": "subtitles.ton618.cannon.charge",
+    "sounds": [
+      {
+        "name": "ton618:cannon/charge",
+        "stream": true
+      }
+    ]
+  },
+  "cannon.fire": {
+    "subtitle": "subtitles.ton618.cannon.fire",
+    "sounds": [
+      "ton618:cannon/fire"
+    ]
+  },
+  "cannon.beam": {
+    "subtitle": "subtitles.ton618.cannon.beam",
+    "sounds": [
+      "ton618:cannon/beam"
+    ]
+  },
+  "hole.inbound": {
+    "subtitle": "subtitles.ton618.hole.inbound",
+    "sounds": [
+      {
+        "name": "ton618:hole/inbound",
+        "stream": true
+      }
+    ]
+  },
+  "hole.impact": {
+    "subtitle": "subtitles.ton618.hole.impact",
+    "sounds": [
+      "ton618:hole/impact"
+    ]
+  },
+  "hole.rumble": {
+    "subtitle": "subtitles.ton618.hole.rumble",
+    "sounds": [
+      {
+        "name": "ton618:hole/rumble",
+        "stream": true
+      }
+    ]
+  },
+  "hole.collapse": {
+    "subtitle": "subtitles.ton618.hole.collapse",
+    "sounds": [
+      "ton618:hole/collapse"
+    ]
+  },
+  "cutscene.stinger": {
+    "subtitle": "subtitles.ton618.cutscene.stinger",
+    "sounds": [
+      "ton618:cutscene/stinger"
+    ]
+  }
+}

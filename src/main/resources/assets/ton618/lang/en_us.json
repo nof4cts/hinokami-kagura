@@ -1,0 +1,19 @@
+{
+  "item.ton618.remote": "SS-618 Remote",
+  "item.ton618.remote.tip1": "Orbital railgun uplink",
+  "item.ton618.remote.tip2": "Use: lock target  |  Use again: fire",
+  "item.ton618.remote.tip3": "Sneak + use: cancel lock",
+  "message.ton618.no_target": "No target in range",
+  "subtitles.ton618.remote.lock": "Target locked",
+  "subtitles.ton618.remote.arm": "Strike authorised",
+  "subtitles.ton618.remote.deny": "Remote denies",
+  "subtitles.ton618.remote.beep": "Countdown beep",
+  "subtitles.ton618.cannon.charge": "Railgun charging",
+  "subtitles.ton618.cannon.fire": "Railgun fires",
+  "subtitles.ton618.cannon.beam": "Beam roars",
+  "subtitles.ton618.hole.inbound": "Something enormous approaches",
+  "subtitles.ton618.hole.impact": "Cataclysmic impact",
+  "subtitles.ton618.hole.rumble": "Spacetime groans",
+  "subtitles.ton618.hole.collapse": "Black hole collapses",
+  "subtitles.ton618.cutscene.stinger": "Deep boom"
+}
