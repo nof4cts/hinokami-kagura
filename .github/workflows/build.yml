@@ -32,7 +32,8 @@ jobs:
           grep -A2 -E "\.java:[0-9]+: error:" build.log | head -120 | while IFS= read -r line; do
             echo "::error::$(echo "$line" | sed 's/%/%25/g')"
           done
-          grep -E "FAILURE|What went wrong|> " build.log | head -20 | while IFS= read -r line; do echo "::error::$line"; done
+          grep -A12 "What went wrong" build.log | head -40 | while IFS= read -r line; do echo "::error::$line"; done
+          grep -iE "could not|error:|exception" build.log | head -30 | while IFS= read -r line; do echo "::error::$line"; done
 
       - uses: actions/upload-artifact@v4
         with:
