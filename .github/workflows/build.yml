@@ -1,0 +1,40 @@
+# Builds the mod jar on GitHub's servers. Push this project to a GitHub repo, open the
+# "Actions" tab, and download the "sunbreathing-jar" artifact from the latest run.
+name: Build mod jar
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          ./gradlew build --no-daemon 2>&1 | tee build.log
+
+      - name: Report compile errors
+        if: failure()
+        run: |
+          # surface javac errors as annotations (readable without the raw log)
+          grep -A2 -E "\.java:[0-9]+: error:" build.log | head -120 | while IFS= read -r line; do
+            echo "::error::$(echo "$line" | sed 's/%/%25/g')"
+          done
+          grep -E "FAILURE|What went wrong|> " build.log | head -20 | while IFS= read -r line; do echo "::error::$line"; done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shrine-jar
+          path: build/libs/*.jar

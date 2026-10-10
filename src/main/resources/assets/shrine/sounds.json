@@ -1,0 +1,110 @@
+{
+  "dismantle": {
+    "subtitle": "subtitles.shrine.dismantle",
+    "sounds": [
+      "shrine:dismantle"
+    ]
+  },
+  "barrage": {
+    "subtitle": "subtitles.shrine.barrage",
+    "sounds": [
+      "shrine:barrage"
+    ]
+  },
+  "cleave": {
+    "subtitle": "subtitles.shrine.cleave",
+    "sounds": [
+      "shrine:cleave"
+    ]
+  },
+  "spiderweb": {
+    "subtitle": "subtitles.shrine.spiderweb",
+    "sounds": [
+      "shrine:spiderweb"
+    ]
+  },
+  "black_flash": {
+    "subtitle": "subtitles.shrine.black_flash",
+    "sounds": [
+      "shrine:black_flash"
+    ]
+  },
+  "fuga.ignite": {
+    "subtitle": "subtitles.shrine.fuga.ignite",
+    "sounds": [
+      "shrine:fuga/ignite"
+    ]
+  },
+  "fuga.draw": {
+    "subtitle": "subtitles.shrine.fuga.draw",
+    "sounds": [
+      "shrine:fuga/draw"
+    ]
+  },
+  "fuga.release": {
+    "subtitle": "subtitles.shrine.fuga.release",
+    "sounds": [
+      "shrine:fuga/release"
+    ]
+  },
+  "fuga.impact": {
+    "subtitle": "subtitles.shrine.fuga.impact",
+    "sounds": [
+      "shrine:fuga/impact"
+    ]
+  },
+  "domain.sign": {
+    "subtitle": "subtitles.shrine.domain.sign",
+    "sounds": [
+      "shrine:domain/sign"
+    ]
+  },
+  "domain.open": {
+    "subtitle": "subtitles.shrine.domain.open",
+    "sounds": [
+      "shrine:domain/open"
+    ]
+  },
+  "domain.shred": {
+    "subtitle": "subtitles.shrine.domain.shred",
+    "sounds": [
+      "shrine:domain/shred"
+    ]
+  },
+  "world.sign": {
+    "subtitle": "subtitles.shrine.world.sign",
+    "sounds": [
+      "shrine:world/sign"
+    ]
+  },
+  "world.slash": {
+    "subtitle": "subtitles.shrine.world.slash",
+    "sounds": [
+      "shrine:world/slash"
+    ]
+  },
+  "world.split": {
+    "subtitle": "subtitles.shrine.world.split",
+    "sounds": [
+      "shrine:world/split"
+    ]
+  },
+  "impact": {
+    "subtitle": "subtitles.shrine.impact",
+    "sounds": [
+      "shrine:impact"
+    ]
+  },
+  "card": {
+    "subtitle": "subtitles.shrine.card",
+    "sounds": [
+      "shrine:card"
+    ]
+  },
+  "deny": {
+    "subtitle": "subtitles.shrine.deny",
+    "sounds": [
+      "shrine:deny"
+    ]
+  }
+}
