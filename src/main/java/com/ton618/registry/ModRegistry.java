@@ -33,6 +33,19 @@ public final class ModRegistry {
     public static final RegistryObject<SoundEvent> HOLE_RUMBLE = sound("hole.rumble");
     public static final RegistryObject<SoundEvent> HOLE_COLLAPSE = sound("hole.collapse");
     public static final RegistryObject<SoundEvent> CUT_STINGER = sound("cutscene.stinger");
+    public static final RegistryObject<SoundEvent> CUT_WHOOSH = sound("cutscene.whoosh");
+    public static final RegistryObject<SoundEvent> IMPACT_HIT = sound("impact.hit");
+    // The star the cannon pierces
+    public static final RegistryObject<SoundEvent> STAR_PIERCE = sound("star.pierce");
+    public static final RegistryObject<SoundEvent> STAR_COLLAPSE = sound("star.collapse");
+    // The Sun
+    public static final RegistryObject<SoundEvent> SUN_TEAR = sound("sun.tear");
+    public static final RegistryObject<SoundEvent> SUN_INBOUND = sound("sun.inbound");
+    public static final RegistryObject<SoundEvent> SUN_IMPACT = sound("sun.impact");
+    // The Archangel
+    public static final RegistryObject<SoundEvent> ANGEL_CHOIR = sound("angel.choir");
+    public static final RegistryObject<SoundEvent> ANGEL_SWING = sound("angel.swing");
+    public static final RegistryObject<SoundEvent> ANGEL_SLASH = sound("angel.slash");
 
     private ModRegistry() {}
 

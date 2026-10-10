@@ -72,6 +72,12 @@ public final class RemoteHud implements IGuiOverlay {
                     : String.format("RANGE  %d m", (int) mc.player.getEyePosition(partial).distanceTo(hit.getLocation()));
             g.drawString(font, txt, cx + 22, cy + 6, hit.getType() == HitResult.Type.MISS ? RED : AMBER, false);
             g.drawString(font, "USE TO LOCK", cx + 22, cy + 16, DIM, false);
+            net.minecraft.world.item.ItemStack held = mc.player.getMainHandItem().getItem() instanceof RemoteItem
+                    ? mc.player.getMainHandItem() : mc.player.getOffhandItem();
+            String mode = net.minecraft.network.chat.Component.translatable(
+                    "strike.ton618." + RemoteItem.mode(held).key).getString().toUpperCase(java.util.Locale.ROOT);
+            g.drawString(font, "STRIKE  " + mode, cx + 22, cy + 26, RED, false);
+            g.drawString(font, "SNEAK + USE TO CHANGE", cx + 22, cy + 36, DIM, false);
             return;
         }
 

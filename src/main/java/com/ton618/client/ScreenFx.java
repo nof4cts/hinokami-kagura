@@ -26,19 +26,115 @@ public final class ScreenFx {
     /** Sustained shake/aberration from an approaching hole, set every frame. */
     private static float ambientShake;
 
+    // ------------------------------------------------------------------ impact frames
+    /** Impact frame modes (composite.fsh). */
+    public static final int INK = 1, NEGATIVE = 2, TWO_TONE = 3, HALFTONE = 4, WHITE_OUT = 5;
+
+    /** A sequence of stark frames: {mode, milliseconds} pairs. Each step re-rolls the speed lines. */
+    public enum Hit {
+        /** a single sharp beat (a cut, a shot fired) */
+        LIGHT(new int[][]{{INK, 45}, {NEGATIVE, 45}}),
+        /** a big beat (a star pierced, the blade coming down) */
+        HEAVY(new int[][]{{WHITE_OUT, 35}, {INK, 55}, {NEGATIVE, 45}, {TWO_TONE, 60}, {INK, 40}, {NEGATIVE, 70}}),
+        /** the end of the world (every final impact) */
+        ULTIMATE(new int[][]{{WHITE_OUT, 50}, {INK, 70}, {NEGATIVE, 50}, {TWO_TONE, 70}, {INK, 45}, {HALFTONE, 70},
+                {NEGATIVE, 50}, {TWO_TONE, 85}, {INK, 50}, {WHITE_OUT, 40}, {NEGATIVE, 160}});
+
+        final int[][] steps;
+        final int total;
+
+        Hit(int[][] steps) {
+            this.steps = steps;
+            int t = 0;
+            for (int[] st : steps) t += st[1];
+            this.total = t;
+        }
+    }
+
+    private static Hit hit;
+    private static double hitStart = -1;
+    private static Vec3 hitWorld;
+    private static float hitU = 0.5f, hitV = 0.5f;
+    private static float[] accent = {1f, 0.2f, 0.05f};
+    private static float pendingFlash;
+    private static double pendingFlashAt = -1;
+    private static float punch;
+    private static int hitSalt;
+
+    /**
+     * Starts an impact frame sequence centred on a world position (projected every frame), or on a fixed
+     * screen point when {@code world} is null (space shots). Accent colours the two-tone/halftone frames.
+     */
+    public static void hit(Hit kind, Vec3 world, float u, float v, float r, float g, float b) {
+        hit = kind;
+        hitStart = seconds();
+        hitWorld = world;
+        hitU = u;
+        hitV = v;
+        accent = new float[]{r, g, b};
+        hitSalt = (int) (Math.random() * 1000);
+        punch = Math.max(punch, kind == Hit.LIGHT ? 0.5f : 1f);
+        trauma = Math.min(1f, trauma + (kind == Hit.LIGHT ? 0.25f : kind == Hit.HEAVY ? 0.55f : 0.9f));
+    }
+
+    /** Current impact frame: {mode, amount, seed} or null. */
+    public static float[] impactFrame() {
+        if (hit == null || hitStart < 0) return null;
+        double ms = (seconds() - hitStart) * 1000.0;
+        int acc = 0;
+        for (int i = 0; i < hit.steps.length; i++) {
+            int[] st = hit.steps[i];
+            if (ms < acc + st[1]) {
+                float amount = 1f;
+                if (i == hit.steps.length - 1) amount = 1f - (float) ((ms - acc) / st[1]); // the last one fades out
+                return new float[]{st[0], amount, i * 17 + hitSalt};
+            }
+            acc += st[1];
+        }
+        hit = null;
+        return null;
+    }
+
+    public static Vec3 impactWorld() {
+        return hitWorld;
+    }
+
+    public static float impactU() {
+        return hitU;
+    }
+
+    public static float impactV() {
+        return hitV;
+    }
+
+    public static float[] accent() {
+        return accent;
+    }
+
+    public static float punch() {
+        return punch * Ton618Config.CLIENT.cameraShake.get().floatValue();
+    }
+
+    /** A flash that goes off when the current impact frames finish. */
+    public static void flashAfterHit(float amount) {
+        pendingFlash = Math.max(pendingFlash, amount);
+        pendingFlashAt = hitStart + (hit == null ? 0 : hit.total / 1000.0);
+    }
+
     private ScreenFx() {}
 
     private static double seconds() {
         return System.nanoTime() / 1.0e9;
     }
 
-    /** The hole has arrived. Strength falls off with distance from the impact. */
-    public static void impact(Vec3 at, float rs) {
+    /** The blow has landed. Strength falls off with distance from the impact. */
+    public static void impact(Vec3 at, float rs, float r, float g, float b) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        double dist = mc.player.position().distanceTo(at);
-        float k = Mth.clamp(1f - (float) (dist / (600.0 + rs * 30.0)), 0.15f, 1f);
-        flash = Math.max(flash, k);
+        double dist = mc.gameRenderer.getMainCamera().getPosition().distanceTo(at);
+        float k = Mth.clamp(1f - (float) (dist / (900.0 + rs * 30.0)), 0.15f, 1f);
+        hit(Hit.ULTIMATE, at, 0.5f, 0.5f, r, g, b);
+        flashAfterHit(k);
         afterimage = Math.max(afterimage, k);
         trauma = Math.min(1f, trauma + k);
         aberration = Math.max(aberration, k);
@@ -59,7 +155,7 @@ public final class ScreenFx {
 
     public static boolean active() {
         return flash > 0.001f || afterimage > 0.001f || trauma > 0.001f || aberration > 0.001f
-                || desaturate > 0.001f || shockStart >= 0;
+                || desaturate > 0.001f || shockStart >= 0 || hit != null || punch > 0.001f || pendingFlashAt >= 0;
     }
 
     /** Advance decays; call once per rendered frame. */
@@ -73,6 +169,12 @@ public final class ScreenFx {
         aberration = Math.max(0f, aberration - dt * 0.6f);
         desaturate = Math.max(0f, desaturate - dt * 0.12f);
         if (shockStart >= 0 && seconds() - shockStart > 4.0) shockStart = -1;
+        punch = Math.max(0f, punch - dt * (hit != null ? 0.6f : 3.0f));
+        if (pendingFlashAt >= 0 && seconds() >= pendingFlashAt) {
+            flash = Math.max(flash, pendingFlash);
+            pendingFlash = 0f;
+            pendingFlashAt = -1;
+        }
     }
 
     public static float flash() {
@@ -124,7 +226,9 @@ public final class ScreenFx {
     }
 
     public static void reset() {
-        flash = afterimage = trauma = aberration = desaturate = ambientShake = 0f;
+        flash = afterimage = trauma = aberration = desaturate = ambientShake = punch = pendingFlash = 0f;
         shockStart = -1;
+        pendingFlashAt = -1;
+        hit = null;
     }
 }

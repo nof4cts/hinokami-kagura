@@ -18,6 +18,21 @@ import net.minecraft.world.phys.Vec3;
  * Blocks are cleared with flags 2|16|32: tell clients, skip neighbour shape updates and drops.
  */
 final class Consumption {
+    /** Decides what a position becomes. Return null to leave it alone. d = distance from centre in blocks. */
+    interface Replacer {
+        BlockState replace(BlockPos pos, BlockState old, double d, int dx, int dy, int dz);
+    }
+
+    /** Told about every block that was solid and got removed (to fling it visually into the hole). */
+    interface Sink {
+        void removed(BlockPos pos, BlockState old);
+    }
+
+    static final Replacer ERASE = (pos, old, d, dx, dy, dz) -> AIR;
+
+    private Replacer replacer = ERASE;
+    private Sink sink;
+
     private static final int FLAGS = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS;
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
 
@@ -39,6 +54,12 @@ final class Consumption {
         this.startTick = startTick;
         this.growTicks = Math.max(1, growTicks);
         this.done = radius <= 0;
+    }
+
+    Consumption with(Replacer r, Sink s) {
+        this.replacer = r;
+        this.sink = s;
+        return this;
     }
 
     boolean done() {
@@ -85,8 +106,13 @@ final class Consumption {
                                 if (y < minY || y > maxY) continue;
                                 pos.set(centre.getX() + dx, y, centre.getZ() + dz);
                                 if (!level.isLoaded(pos)) continue;
-                                if (level.getBlockState(pos).isAir()) continue;
-                                level.setBlock(pos, AIR, FLAGS);
+                                BlockState old = level.getBlockState(pos);
+                                if (old.isAir() && replacer == ERASE) continue;
+                                int ddy = y - centre.getY();
+                                BlockState now = replacer.replace(pos, old, Math.sqrt(rxz + ddy * ddy), dx, ddy, dz);
+                                if (now == null || now == old) continue;
+                                if (sink != null && !old.isAir() && now.isAir()) sink.removed(pos.immutable(), old);
+                                level.setBlock(pos, now, FLAGS);
                                 changed++;
                             }
                         }

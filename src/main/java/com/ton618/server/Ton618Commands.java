@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.ton618.Ton618Mod;
+import com.ton618.common.StrikeKind;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -19,7 +20,7 @@ import net.minecraftforge.fml.common.Mod;
  * Test commands for Stage 1 (the orbital cannon and remote replace these as the real trigger later):
  *   /ton618 preview [distance] [size]  - a black hole hanging in front of you, to study the visuals
  *   /ton618 drop [size]                - one falls from the sky onto the block you're looking at
- *   /ton618 strike                     - the full sequence (cutscene + destruction) on the block you look at
+ *   /ton618 strike [hole|sun|angel]    - the full sequence (cutscene + destruction) on the block you look at
  *   /ton618 clear                      - remove all black holes in this dimension
  * size = event horizon radius in blocks.
  */
@@ -41,17 +42,23 @@ public final class Ton618Commands {
                         .executes(c -> drop(c, 18f))
                         .then(Commands.argument("size", FloatArgumentType.floatArg(0.5f, 400f))
                                 .executes(c -> drop(c, FloatArgumentType.getFloat(c, "size")))))
-                .then(Commands.literal("strike").executes(c -> {
-                    ServerPlayer p = c.getSource().getPlayerOrException();
-                    HitResult hit = p.pick(Strikes.lockRange(p), 1f, false);
-                    if (hit.getType() == HitResult.Type.MISS) {
-                        c.getSource().sendFailure(Component.literal("Look at the ground (within range) to strike."));
-                        return 0;
-                    }
-                    Strikes.start(p, hit.getLocation());
-                    return 1;
-                }))
+                .then(Commands.literal("strike")
+                        .executes(c -> strike(c, StrikeKind.HOLE))
+                        .then(Commands.literal("hole").executes(c -> strike(c, StrikeKind.HOLE)))
+                        .then(Commands.literal("sun").executes(c -> strike(c, StrikeKind.SUN)))
+                        .then(Commands.literal("angel").executes(c -> strike(c, StrikeKind.ANGEL))))
                 .then(Commands.literal("clear").executes(Ton618Commands::clear)));
+    }
+
+    private static int strike(CommandContext<CommandSourceStack> c, StrikeKind kind) throws CommandSyntaxException {
+        ServerPlayer p = c.getSource().getPlayerOrException();
+        HitResult hit = p.pick(Strikes.lockRange(p), 1f, false);
+        if (hit.getType() == HitResult.Type.MISS) {
+            c.getSource().sendFailure(Component.literal("Look at the ground (within range) to strike."));
+            return 0;
+        }
+        Strikes.start(p, hit.getLocation(), kind);
+        return 1;
     }
 
     private static int preview(CommandContext<CommandSourceStack> c, float distance, float size) throws CommandSyntaxException {

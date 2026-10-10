@@ -1,5 +1,6 @@
 package com.ton618.item;
 
+import com.ton618.common.StrikeKind;
 import com.ton618.config.Ton618Config;
 import com.ton618.network.Net;
 import com.ton618.network.S2CLock;
@@ -29,14 +30,20 @@ import java.util.UUID;
 /**
  * The SS-618 remote.
  *   Use once:        lock the block you're looking at (up to the lock range); the HUD brackets it.
- *   Use again (5 s): fire. The orbital cannon charges, shoots, and TON 618 falls on the lock.
- *   Sneak + use:     cancel the lock.
+ *   Use again (5 s): fire the selected strike on the lock.
+ *   Sneak + use:     cancel the lock, or (with no lock) cycle the strike: TON 618 / The Sun / Archangel.
  */
 public class RemoteItem extends Item {
     public static final int LOCK_TICKS = 100;
     private static final Map<UUID, Lock> LOCKS = new HashMap<>();
 
     private record Lock(Vec3 target, long expires) {}
+
+    public static final String MODE_TAG = "Strike";
+
+    public static StrikeKind mode(ItemStack stack) {
+        return stack.hasTag() ? StrikeKind.byId(stack.getTag().getInt(MODE_TAG)) : StrikeKind.HOLE;
+    }
 
     public RemoteItem(Properties props) {
         super(props);
@@ -52,6 +59,12 @@ public class RemoteItem extends Item {
             if (LOCKS.remove(sp.getUUID()) != null) {
                 Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), S2CLock.cleared());
                 sp.playNotifySound(ModRegistry.REMOTE_DENY.get(), SoundSource.PLAYERS, 0.8f, 0.8f);
+            } else {
+                StrikeKind next = mode(stack).next();
+                stack.getOrCreateTag().putInt(MODE_TAG, next.ordinal());
+                sp.playNotifySound(ModRegistry.REMOTE_BEEP.get(), SoundSource.PLAYERS, 0.8f, 1.2f + 0.15f * next.ordinal());
+                sp.displayClientMessage(Component.translatable("message.ton618.mode",
+                        Component.translatable("strike.ton618." + next.key).withStyle(ChatFormatting.GOLD)), true);
             }
             return InteractionResultHolder.success(stack);
         }
@@ -61,7 +74,7 @@ public class RemoteItem extends Item {
             LOCKS.remove(sp.getUUID());
             Net.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), S2CLock.cleared());
             sp.playNotifySound(ModRegistry.REMOTE_ARM.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
-            Strikes.start(sp, lock.target());
+            Strikes.start(sp, lock.target(), mode(stack));
             if (!sp.getAbilities().instabuild) {
                 sp.getCooldowns().addCooldown(this, Ton618Config.SERVER.cooldownSeconds.get() * 20);
             }
@@ -84,6 +97,8 @@ public class RemoteItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.translatable("item.ton618.remote.tip1").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("message.ton618.mode",
+                Component.translatable("strike.ton618." + mode(stack).key)).withStyle(ChatFormatting.RED));
         tooltip.add(Component.translatable("item.ton618.remote.tip2").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("item.ton618.remote.tip3").withStyle(ChatFormatting.DARK_GRAY));
     }

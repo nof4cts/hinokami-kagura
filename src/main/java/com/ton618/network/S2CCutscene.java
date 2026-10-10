@@ -15,8 +15,10 @@ public final class S2CCutscene {
     public final Vec3 from;
     public final int holeId;
     public final int shooterId;
+    public final int kind;
 
-    public S2CCutscene(long startTick, Vec3 target, Vec3 from, int holeId, int shooterId) {
+    public S2CCutscene(long startTick, Vec3 target, Vec3 from, int holeId, int shooterId, int kind) {
+        this.kind = kind;
         this.startTick = startTick;
         this.target = target;
         this.from = from;
@@ -26,7 +28,7 @@ public final class S2CCutscene {
 
     public S2CCutscene(FriendlyByteBuf buf) {
         this(buf.readLong(), new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble()),
-                new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble()), buf.readVarInt(), buf.readVarInt());
+                new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble()), buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -39,6 +41,7 @@ public final class S2CCutscene {
         buf.writeDouble(from.z);
         buf.writeVarInt(holeId);
         buf.writeVarInt(shooterId);
+        buf.writeVarInt(kind);
     }
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {

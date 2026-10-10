@@ -6,7 +6,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class Net {
-    private static final String PROTOCOL = "1";
+    private static final String PROTOCOL = "2";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             Ton618Mod.id("main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
 
@@ -21,5 +21,7 @@ public final class Net {
                 .encoder(S2CLock::encode).decoder(S2CLock::new).consumerMainThread(S2CLock::handle).add();
         CHANNEL.messageBuilder(S2CCutscene.class, id++, NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(S2CCutscene::encode).decoder(S2CCutscene::new).consumerMainThread(S2CCutscene::handle).add();
+        CHANNEL.messageBuilder(S2CDebris.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(S2CDebris::encode).decoder(S2CDebris::new).consumerMainThread(S2CDebris::handle).add();
     }
 }

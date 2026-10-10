@@ -65,6 +65,12 @@ public final class Ton618Config {
         public final ForgeConfigSpec.IntValue lockRange;
         public final ForgeConfigSpec.IntValue cooldownSeconds;
         public final ForgeConfigSpec.IntValue cutsceneRadius;
+        public final ForgeConfigSpec.IntValue debrisPerTick;
+        public final ForgeConfigSpec.DoubleValue sunRadius;
+        public final ForgeConfigSpec.IntValue scorchRadius;
+        public final ForgeConfigSpec.DoubleValue angelHeight;
+        public final ForgeConfigSpec.IntValue riftLength;
+        public final ForgeConfigSpec.IntValue riftWidth;
 
         Server(ForgeConfigSpec.Builder b) {
             b.push("strike");
@@ -80,12 +86,26 @@ public final class Ton618Config {
             lingerSeconds = b.comment("Seconds the black hole stays after it finishes consuming, before collapsing.")
                     .defineInRange("lingerSeconds", 12, 0, 3600);
             destroyBlocks = b.comment("Whether blocks are actually removed (false = visual only).").define("destroyBlocks", true);
-            pullEntities = b.comment("Whether mobs, items and players are pulled in and destroyed.").define("pullEntities", true);
+            pullEntities = b.comment("Whether mobs, items and players are slowly dragged in and destroyed.").define("pullEntities", true);
+            debrisPerTick = b.comment("Blocks per tick that visibly tear loose and spiral into the hole (client visuals; 0 = none).")
+                    .defineInRange("debrisPerTick", 90, 0, 2000);
             lockRange = b.comment("Max targeting range of the remote, in blocks (also limited by the client's view distance).")
                     .defineInRange("lockRange", 640, 16, 4096);
             cooldownSeconds = b.comment("Remote cooldown after a strike.").defineInRange("cooldownSeconds", 30, 0, 36000);
             cutsceneRadius = b.comment("Players within this many blocks of the target or the shooter see the cutscene.")
                     .defineInRange("cutsceneRadius", 512, 0, 100000);
+            b.pop();
+            b.push("sun");
+            sunRadius = b.comment("Radius of the falling Sun as drawn, in blocks.").defineInRange("sunRadius", 110.0, 10.0, 1000.0);
+            scorchRadius = b.comment("Radius of the crater the Sun burns out of the world, in blocks.",
+                    "The ground beyond it is scorched to blackstone and magma.").defineInRange("scorchRadius", 120, 0, 1024);
+            b.pop();
+            b.push("angel");
+            angelHeight = b.comment("Height of the Archangel, in blocks.").defineInRange("angelHeight", 190.0, 20.0, 2000.0);
+            riftLength = b.comment("Length of the rift the Archangel cuts through the world, end to end, in blocks.")
+                    .defineInRange("riftLength", 900, 0, 8192);
+            riftWidth = b.comment("Width of the rift at its widest, in blocks. It goes all the way down to the void.")
+                    .defineInRange("riftWidth", 14, 1, 128);
             b.pop();
         }
     }

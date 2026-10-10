@@ -54,6 +54,7 @@ public final class ClientEvents {
 
         @SubscribeEvent
         public static void onRenderLevel(RenderLevelStageEvent event) {
+            Debris.render(event);
             PostFx.render(event);
         }
 
@@ -112,6 +113,7 @@ public final class ClientEvents {
         public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
             Cutscene.stop();
             ClientHoles.clear();
+            Debris.clear();
             ScreenFx.reset();
         }
     }

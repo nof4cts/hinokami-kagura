@@ -1,6 +1,7 @@
 package com.ton618.client;
 
 import com.ton618.common.BlackHole;
+import com.ton618.common.StrikeKind;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
@@ -32,7 +33,7 @@ public final class ClientHoles {
         // Holes that had already landed before we joined shouldn't replay their impact.
         double now = gameTime(0f);
         for (BlackHole h : holes) {
-            if (SEEN.add(h.id()) && h.landed(now) && now - (h.startTick() + h.descentTicks()) > 40) {
+            if (SEEN.add(h.id()) && h.struck(now) && now - h.impactTick() > 40) {
                 IMPACTED.add(h.id());
             }
         }
@@ -58,10 +59,14 @@ public final class ClientHoles {
     public static void tick() {
         double now = gameTime(0f);
         for (BlackHole h : holes) {
-            if (h.landed(now) && IMPACTED.add(h.id())) {
-                ScreenFx.impact(h.end(), h.rs());
+            if (h.falls() && h.struck(now) && IMPACTED.add(h.id())) {
+                switch (h.strikeKind()) {
+                    case SUN -> ScreenFx.impact(h.end(), h.rs(), 1.0f, 0.22f, 0.04f);
+                    case ANGEL -> ScreenFx.impact(h.end().add(h.facing().scale(h.rs() * 0.62)), h.rs() * 0.3f, 1.0f, 0.72f, 0.2f);
+                    default -> ScreenFx.impact(h.end(), h.rs(), 0.62f, 0.22f, 1.0f);
+                }
             }
-            if ((h.landed(now) || !h.falls()) && !RUMBLING.contains(h.id())) {
+            if (h.strikeKind() != StrikeKind.ANGEL && (h.landed(now) || !h.falls()) && !RUMBLING.contains(h.id())) {
                 RUMBLING.add(h.id());
                 Minecraft.getInstance().getSoundManager().play(new HoleRumbleSound(h.id(), h.end()));
             }

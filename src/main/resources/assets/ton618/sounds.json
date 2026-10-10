@@ -79,5 +79,65 @@
     "sounds": [
       "ton618:cutscene/stinger"
     ]
+  },
+  "cutscene.whoosh": {
+    "subtitle": "subtitles.ton618.cutscene.whoosh",
+    "sounds": [
+      "ton618:cutscene/whoosh"
+    ]
+  },
+  "impact.hit": {
+    "subtitle": "subtitles.ton618.impact.hit",
+    "sounds": [
+      "ton618:impact/hit"
+    ]
+  },
+  "star.pierce": {
+    "subtitle": "subtitles.ton618.star.pierce",
+    "sounds": [
+      "ton618:star/pierce"
+    ]
+  },
+  "star.collapse": {
+    "subtitle": "subtitles.ton618.star.collapse",
+    "sounds": [
+      "ton618:star/collapse"
+    ]
+  },
+  "sun.tear": {
+    "subtitle": "subtitles.ton618.sun.tear",
+    "sounds": [
+      "ton618:sun/tear"
+    ]
+  },
+  "sun.inbound": {
+    "subtitle": "subtitles.ton618.sun.inbound",
+    "sounds": [
+      "ton618:sun/inbound"
+    ]
+  },
+  "sun.impact": {
+    "subtitle": "subtitles.ton618.sun.impact",
+    "sounds": [
+      "ton618:sun/impact"
+    ]
+  },
+  "angel.choir": {
+    "subtitle": "subtitles.ton618.angel.choir",
+    "sounds": [
+      "ton618:angel/choir"
+    ]
+  },
+  "angel.swing": {
+    "subtitle": "subtitles.ton618.angel.swing",
+    "sounds": [
+      "ton618:angel/swing"
+    ]
+  },
+  "angel.slash": {
+    "subtitle": "subtitles.ton618.angel.slash",
+    "sounds": [
+      "ton618:angel/slash"
+    ]
   }
 }

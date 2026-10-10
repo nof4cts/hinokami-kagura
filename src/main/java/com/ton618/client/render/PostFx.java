@@ -9,6 +9,10 @@ import com.ton618.client.ClientHoles;
 import com.ton618.client.ScreenFx;
 import com.ton618.client.cinematic.Cutscene;
 import com.ton618.client.cinematic.Pose;
+import com.ton618.common.AngelAnim;
+import com.ton618.common.BlackHole;
+import com.ton618.common.StrikeKind;
+import com.ton618.common.StrikeTiming;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.ResourceLocation;
 import com.ton618.config.Ton618Config;
@@ -42,7 +46,7 @@ import org.lwjgl.opengl.GL30;
 public final class PostFx {
     private static final int BLOOM_LEVELS = 6;
 
-    private static GlProgram hole, orbit, down, up, composite;
+    private static GlProgram hole, space, sun, angel, down, up, composite;
     private static String failure;
     private static boolean warned;
 
@@ -60,7 +64,9 @@ public final class PostFx {
         closePrograms();
         try {
             hole = GlProgram.load(rm, "fullscreen.vsh", "blackhole.fsh");
-            orbit = GlProgram.load(rm, "fullscreen.vsh", "orbit.fsh");
+            space = GlProgram.load(rm, "fullscreen.vsh", "space.fsh");
+            sun = GlProgram.load(rm, "fullscreen.vsh", "sun.fsh");
+            angel = GlProgram.load(rm, "fullscreen.vsh", "angel.fsh");
             down = GlProgram.load(rm, "fullscreen.vsh", "bloom_down.fsh");
             up = GlProgram.load(rm, "fullscreen.vsh", "bloom_up.fsh");
             composite = GlProgram.load(rm, "fullscreen.vsh", "composite.fsh");
@@ -75,10 +81,10 @@ public final class PostFx {
     }
 
     private static void closePrograms() {
-        for (GlProgram p : new GlProgram[]{hole, orbit, down, up, composite}) {
+        for (GlProgram p : new GlProgram[]{hole, space, sun, angel, down, up, composite}) {
             if (p != null) p.close();
         }
-        hole = orbit = down = up = composite = null;
+        hole = space = sun = angel = down = up = composite = null;
     }
 
     private static void ensureTargets(int w, int h) {
@@ -128,11 +134,11 @@ public final class PostFx {
         ClientHoles.Frame frame = ClientHoles.frame(event.getPartialTick(), cam);
         ScreenFx.setAmbient(frame == null ? 0f : ambientShake(frame, cam));
         Pose pose = Cutscene.pose();
-        Pose space = pose != null && pose.space() ? pose : null;
-        if (frame == null && space == null && !ScreenFx.active()) return;
+        Pose spacePose = pose != null && pose.space() ? pose : null;
+        if (frame == null && spacePose == null && !ScreenFx.active()) return;
 
         try {
-            draw(mc, event, frame, cam, space);
+            draw(mc, event, frame, cam, spacePose);
         } catch (Throwable t) {
             Ton618Mod.LOGGER.error("TON 618 post pipeline failed; disabling effects until resources reload", t);
             failure = String.valueOf(t.getMessage());
@@ -146,8 +152,12 @@ public final class PostFx {
     private static float ambientShake(ClientHoles.Frame f, Vec3 cam) {
         if (!f.hole().falls() || f.approach() >= 1f) return 0f;
         double d = f.position().distanceTo(cam);
-        float near = Mth.clamp(1f - (float) (d / (f.hole().rs() * 60.0)), 0f, 1f);
-        return 0.55f * f.approach() * f.approach() * (0.3f + 0.7f * near);
+        StrikeKind k = f.hole().strikeKind();
+        if (k == StrikeKind.ANGEL) return 0f;
+        double reach = k == StrikeKind.SUN ? f.hole().rs() * 14.0 : f.hole().rs() * 60.0;
+        float near = Mth.clamp(1f - (float) (d / reach), 0f, 1f);
+        float a = k == StrikeKind.SUN ? 0.75f : 0.55f;
+        return a * f.approach() * f.approach() * (0.3f + 0.7f * near);
     }
 
     private static void draw(Minecraft mc, RenderLevelStageEvent event, ClientHoles.Frame frame, Vec3 cam,
@@ -173,18 +183,24 @@ public final class PostFx {
         GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, scene.fbo);
         GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 
-        // 2a. orbit shots replace the whole image
+        // 2a. space shots replace the whole image; 2b. otherwise the strike body is drawn over the world
+        float[] rays = null;
         if (space != null) {
             hdr.bindWrite();
-            drawOrbit(mc, space, w, h, time);
+            rays = drawSpace(mc, space, w, h, time);
+        } else if (frame != null && frame.hole().strikeKind() == StrikeKind.SUN) {
+            rays = drawSun(main, frame, cam, proj, invProj, viewRot, invViewRot, time);
+        } else if (frame != null && frame.hole().strikeKind() == StrikeKind.ANGEL) {
+            rays = drawAngel(main, frame, cam, proj, invProj, viewRot, invViewRot, time, event.getPartialTick());
         } else {
             drawHole(main, frame, cam, proj, invProj, viewRot, invViewRot, time);
         }
-        bloomAndComposite(main, w, h, time, frame, cam, viewRot, proj, space != null);
+        bloomAndComposite(main, w, h, time, frame, cam, viewRot, proj, space, rays);
     }
 
     private static final ResourceLocation EARTH_DAY = Ton618Mod.id("textures/space/earth_day_clouds.png");
     private static final ResourceLocation EARTH_NIGHT = Ton618Mod.id("textures/space/earth_night_ocean.png");
+    private static final ResourceLocation EARTH_HEIGHT = Ton618Mod.id("textures/space/earth_height.png");
 
     private static int earthTexture(Minecraft mc, ResourceLocation loc) {
         AbstractTexture tex = mc.getTextureManager().getTexture(loc);
@@ -194,14 +210,18 @@ public final class PostFx {
         return tex.getId();
     }
 
-    private static void drawOrbit(Minecraft mc, Pose pose, int w, int h, float time) {
+    /** Draws a space shot; returns god-ray parameters {u, v, strength, r, g, b} or null. */
+    private static float[] drawSpace(Minecraft mc, Pose pose, int w, int h, float time) {
         GlStateManager._activeTexture(GL13.GL_TEXTURE0);
         int day = earthTexture(mc, EARTH_DAY);
         GlStateManager._activeTexture(GL13.GL_TEXTURE1);
         int night = earthTexture(mc, EARTH_NIGHT);
-        orbit.use();
+        GlStateManager._activeTexture(GL13.GL_TEXTURE2);
+        int height = earthTexture(mc, EARTH_HEIGHT);
+        space.use();
         bindTexture(0, day);
         bindTexture(1, night);
+        bindTexture(2, height);
         Vec3 fwd = pose.fwd();
         Vec3 right = fwd.cross(new Vec3(0, 1, 0));
         if (right.lengthSqr() < 1e-6) right = new Vec3(1, 0, 0);
@@ -210,20 +230,108 @@ public final class PostFx {
         float roll = pose.roll() * Mth.DEG_TO_RAD;
         Vec3 r2 = right.scale(Mth.cos(roll)).add(up.scale(Mth.sin(roll)));
         Vec3 u2 = up.scale(Mth.cos(roll)).subtract(right.scale(Mth.sin(roll)));
-        orbit.set("EarthDay", 0);
-        orbit.set("EarthNight", 1);
-        orbit.set("CamPos", (float) pose.pos().x, (float) pose.pos().y, (float) pose.pos().z);
-        orbit.set("CamFwd", (float) fwd.x, (float) fwd.y, (float) fwd.z);
-        orbit.set("CamRight", (float) r2.x, (float) r2.y, (float) r2.z);
-        orbit.set("CamUp", (float) u2.x, (float) u2.y, (float) u2.z);
-        orbit.set("TanHalfFov", (float) Math.tan(Math.toRadians(pose.fov()) / 2.0));
-        orbit.set("Aspect", w / (float) h);
-        orbit.set("Time", time);
-        orbit.set("Charge", pose.charge());
-        orbit.set("FireAge", pose.fireAge());
-        orbit.set("ProjT", pose.projT());
-        orbit.set("Steps", Math.min(256, Ton618Config.CLIENT.quality.get().steps));
+        float tanHalf = (float) Math.tan(Math.toRadians(pose.fov()) / 2.0);
+        float aspect = w / (float) h;
+        space.set("EarthDay", 0);
+        space.set("EarthNight", 1);
+        space.set("EarthHeight", 2);
+        space.set("CamPos", (float) pose.pos().x, (float) pose.pos().y, (float) pose.pos().z);
+        space.set("CamFwd", (float) fwd.x, (float) fwd.y, (float) fwd.z);
+        space.set("CamRight", (float) r2.x, (float) r2.y, (float) r2.z);
+        space.set("CamUp", (float) u2.x, (float) u2.y, (float) u2.z);
+        space.set("TanHalfFov", tanHalf);
+        space.set("Aspect", aspect);
+        space.set("Time", time);
+        space.set("Charge", pose.charge());
+        space.set("FireAge", pose.fireAge());
+        space.set("Scene", pose.scene());
+        space.set("Kind", pose.kind());
+        space.set("Progress", pose.progress());
+        space.set("Steps", Math.min(256, Ton618Config.CLIENT.quality.get().steps));
         drawTriangle();
+
+        // god rays from the star in the Sun / pierced-star scenes (both sit at the scene origin)
+        if (pose.scene() == 3 || pose.scene() == 4) {
+            Vec3 d = pose.pos().scale(-1);
+            double z = d.dot(fwd);
+            if (z > 1) {
+                float su = (float) (0.5 + 0.5 * d.dot(r2) / (z * tanHalf * aspect));
+                float sv = (float) (0.5 + 0.5 * d.dot(u2) / (z * tanHalf));
+                float k = pose.scene() == 4 ? 0.6f * (1f - Mth.clamp((pose.progress() - 0.5f) * 8f, 0f, 1f)) : 0.9f;
+                return new float[]{su, sv, k, 1f, 0.75f, 0.45f};
+            }
+        }
+        return null;
+    }
+
+    private static void worldCommon(GlProgram p, RenderTarget main, Vec3 rel, float size, ClientHoles.Frame frame,
+                                    Matrix4f proj, Matrix4f invProj, Matrix3f viewRot, Matrix3f invViewRot, float time,
+                                    float landed) {
+        hdr.bindWrite();
+        p.use();
+        bindTexture(0, scene.texture);
+        bindTexture(1, main.getDepthTextureId());
+        p.set("SceneTex", 0);
+        p.set("DepthTex", 1);
+        p.set("Proj", proj);
+        p.set("InvProj", invProj);
+        p.set("ViewRot", viewRot);
+        p.set("InvViewRot", invViewRot);
+        p.set("Time", time);
+        p.set("Steps", Math.min(160, Ton618Config.CLIENT.quality.get().steps));
+        p.set("BodyRel", (float) rel.x, (float) rel.y, (float) rel.z);
+        p.set("Size", size);
+        p.set("Presence", frame.presence());
+        p.set("Approach", frame.approach());
+        p.set("Landed", landed);
+    }
+
+    private static double now(float partial) {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.level == null ? 0 : mc.level.getGameTime() + partial;
+    }
+
+    private static float[] drawSun(RenderTarget main, ClientHoles.Frame frame, Vec3 cam, Matrix4f proj,
+                                   Matrix4f invProj, Matrix3f viewRot, Matrix3f invViewRot, float time) {
+        BlackHole b = frame.hole();
+        double t = now(0f);
+        float landed = b.landed(t) ? Mth.clamp((float) ((t - (b.startTick() + b.descentTicks())) / 80.0), 0.001f, 1f) : 0f;
+        Vec3 rel = frame.position().subtract(cam);
+        worldCommon(sun, main, rel, b.rs(), frame, proj, invProj, viewRot, invViewRot, time, landed);
+        drawTriangle();
+        Vector4f s = project(rel, viewRot, proj);
+        if (s == null) return null;
+        return new float[]{s.x, s.y, 1.1f * frame.presence(), 1f, 0.62f, 0.3f};
+    }
+
+    private static float[] drawAngel(RenderTarget main, ClientHoles.Frame frame, Vec3 cam, Matrix4f proj,
+                                     Matrix4f invProj, Matrix3f viewRot, Matrix3f invViewRot, float time, float partial) {
+        BlackHole b = frame.hole();
+        double t = now(partial);
+        float since = (float) (t - b.impactTick() + StrikeTiming.A_SLASH);     // ticks since the strike began
+        AngelAnim.State a = AngelAnim.at(since);
+        float unit = b.rs() / 10f;
+        Vec3 feet = frame.position().add(0, a.hover() * unit, 0);
+        Vec3 rel = feet.subtract(cam);
+        worldCommon(angel, main, rel, b.rs(), frame, proj, invProj, viewRot, invViewRot, time, 0f);
+        Vec3 f = b.facing();
+        Vec3 target = b.end().add(f.scale(b.rs() * 0.62));
+        double half = b.tiltX() * 0.5;
+        Vec3 fa = target.subtract(f.scale(half)).subtract(cam);
+        Vec3 fb = target.add(f.scale(half)).subtract(cam);
+        angel.set("FaceDir", (float) f.x, 0f, (float) f.z);
+        angel.set("SwordT", a.swordT());
+        angel.set("SlashAge", a.slashAge());
+        angel.set("FissureA", (float) fa.x, (float) (target.y - cam.y), (float) fa.z);
+        angel.set("FissureB", (float) fb.x, (float) (target.y - cam.y), (float) fb.z);
+        angel.set("FissureW", b.tiltZ() * 0.5f);
+        angel.set("WingBeat", a.wingBeat());
+        angel.set("Lean", a.lean());
+        angel.set("SwordGlow", a.glow());
+        drawTriangle();
+        Vector4f s = project(rel.add(0, b.rs() * 1.05, 0), viewRot, proj);
+        if (s == null) return null;
+        return new float[]{s.x, s.y, 0.7f * frame.presence(), 1f, 0.9f, 0.7f};
     }
 
     private static void drawHole(RenderTarget main, ClientHoles.Frame frame, Vec3 cam, Matrix4f proj,
@@ -262,7 +370,8 @@ public final class PostFx {
     }
 
     private static void bloomAndComposite(RenderTarget main, int w, int h, float time, ClientHoles.Frame frame,
-                                          Vec3 cam, Matrix3f viewRot, Matrix4f proj, boolean space) {
+                                          Vec3 cam, Matrix3f viewRot, Matrix4f proj, Pose spacePose, float[] rays) {
+        boolean space = spacePose != null;
         // 3. bloom: down...
         RenderTex src = hdr;
         down.use();
@@ -303,12 +412,13 @@ public final class PostFx {
         composite.set("Time", time);
         composite.set("BloomStrength", 0.35f * Ton618Config.CLIENT.bloom.get().floatValue());
         composite.set("Exposure", 1f);
-        float approachAb = space ? 0.15f : (frame == null ? 0f : 0.25f * frame.eclipse());
+        boolean holeFrame = frame != null && frame.hole().strikeKind() == StrikeKind.HOLE;
+        float approachAb = space ? 0.15f : (!holeFrame ? 0f : 0.25f * frame.eclipse());
         composite.set("Aberration", ScreenFx.aberration(approachAb));
         composite.set("Flash", 1f, 0.97f, 0.92f, ScreenFx.flash());
         composite.set("Afterimage", ScreenFx.afterimage());
-        composite.set("Desaturate", space ? 0f : Math.max(ScreenFx.desaturate(), frame == null ? 0f : 0.15f * frame.eclipse()));
-        composite.set("Vignette", space ? 0.4f : 0.25f + (frame == null ? 0f : 0.25f * frame.eclipse()));
+        composite.set("Desaturate", space ? 0f : Math.max(ScreenFx.desaturate(), !holeFrame ? 0f : 0.15f * frame.eclipse()));
+        composite.set("Vignette", space ? 0.4f : 0.25f + (!holeFrame ? 0f : 0.25f * frame.eclipse()));
         composite.set("Grain", 0.35f * Ton618Config.CLIENT.filmGrain.get().floatValue());
         composite.set("Shake", 0f, 0f);
         float shock = ScreenFx.shockStrength();
@@ -317,6 +427,33 @@ public final class PostFx {
             composite.set("Shockwave", clip.x, clip.y, ScreenFx.shockRadius(), shock);
         } else {
             composite.set("Shockwave", 0.5f, 0.5f, 0f, 0f);
+        }
+        // impact frames
+        float[] imp = ScreenFx.impactFrame();
+        float iu = ScreenFx.impactU(), iv = ScreenFx.impactV();
+        if (imp != null && ScreenFx.impactWorld() != null && !space) {
+            Vector4f c = project(ScreenFx.impactWorld().subtract(cam), viewRot, proj);
+            if (c != null) {
+                iu = Mth.clamp(c.x, 0.05f, 0.95f);
+                iv = Mth.clamp(c.y, 0.05f, 0.95f);
+            }
+        }
+        if (imp != null) {
+            composite.set("Impact", imp[0], imp[1] * Ton618Config.CLIENT.flash.get().floatValue() > 0f ? imp[1] : 0f, iu, iv);
+            composite.set("ImpactSeed", imp[2]);
+        } else {
+            composite.set("Impact", 0f, 0f, 0.5f, 0.5f);
+            composite.set("ImpactSeed", 0f);
+        }
+        float[] acc = ScreenFx.accent();
+        composite.set("Accent", acc[0], acc[1], acc[2]);
+        composite.set("Punch", ScreenFx.punch());
+        if (rays != null && rays[2] > 0.001f) {
+            composite.set("GodRays", rays[0], rays[1], rays[2], 0f);
+            composite.set("GodRayColor", rays[3], rays[4], rays[5]);
+        } else {
+            composite.set("GodRays", 0.5f, 0.5f, 0f, 0f);
+            composite.set("GodRayColor", 1f, 1f, 1f);
         }
         drawTriangle();
     }

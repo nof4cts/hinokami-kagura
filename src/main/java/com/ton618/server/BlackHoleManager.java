@@ -2,6 +2,7 @@ package com.ton618.server;
 
 import com.ton618.Ton618Mod;
 import com.ton618.common.BlackHole;
+import com.ton618.common.StrikeKind;
 import com.ton618.network.Net;
 import com.ton618.network.S2CBlackHoles;
 import net.minecraft.resources.ResourceKey;
@@ -34,10 +35,25 @@ public final class BlackHoleManager {
      * @param descentTicks 0 = hangs at {@code end}
      */
     public static BlackHole spawn(ServerLevel level, Vec3 start, Vec3 end, float rs, int delayTicks, int descentTicks) {
+        return spawn(level, start, end, rs, delayTicks, descentTicks, StrikeKind.HOLE, 0f,
+                level.getGameTime() + delayTicks + descentTicks);
+    }
+
+    /**
+     * @param delayTicks   ticks from now before the body appears / starts falling
+     * @param descentTicks 0 = hangs at {@code end}
+     */
+    public static BlackHole spawn(ServerLevel level, Vec3 start, Vec3 end, float rs, int delayTicks, int descentTicks,
+                                  StrikeKind kind, float yaw, long impactTick) {
         float tiltX = 8f + level.random.nextFloat() * 14f;
         float tiltZ = -10f + level.random.nextFloat() * 20f;
+        if (kind == StrikeKind.ANGEL) {
+            // the Archangel has no disk: these carry the rift's length and width to the clients instead
+            tiltX = com.ton618.config.Ton618Config.SERVER.riftLength.get();
+            tiltZ = com.ton618.config.Ton618Config.SERVER.riftWidth.get();
+        }
         BlackHole hole = new BlackHole(nextId++, start, end, rs, level.getGameTime() + delayTicks, descentTicks,
-                tiltX, tiltZ, Long.MAX_VALUE);
+                tiltX, tiltZ, Long.MAX_VALUE, kind.ordinal(), yaw, impactTick);
         HOLES.computeIfAbsent(level.dimension(), k -> new ArrayList<>()).add(hole);
         sync(level);
         return hole;
