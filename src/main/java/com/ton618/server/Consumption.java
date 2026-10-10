@@ -28,7 +28,7 @@ final class Consumption {
         void removed(BlockPos pos, BlockState old);
     }
 
-    static final Replacer ERASE = (pos, old, d, dx, dy, dz) -> AIR;
+    static final Replacer ERASE = (pos, old, d, dx, dy, dz) -> Blocks.AIR.defaultBlockState();
 
     private Replacer replacer = ERASE;
     private Sink sink;
@@ -109,10 +109,10 @@ final class Consumption {
                                 BlockState old = level.getBlockState(pos);
                                 if (old.isAir() && replacer == ERASE) continue;
                                 int ddy = y - centre.getY();
-                                BlockState now = replacer.replace(pos, old, Math.sqrt(rxz + ddy * ddy), dx, ddy, dz);
-                                if (now == null || now == old) continue;
-                                if (sink != null && !old.isAir() && now.isAir()) sink.removed(pos.immutable(), old);
-                                level.setBlock(pos, now, FLAGS);
+                                BlockState next = replacer.replace(pos, old, Math.sqrt(rxz + ddy * ddy), dx, ddy, dz);
+                                if (next == null || next == old) continue;
+                                if (sink != null && !old.isAir() && next.isAir()) sink.removed(pos.immutable(), old);
+                                level.setBlock(pos, next, FLAGS);
                                 changed++;
                             }
                         }
