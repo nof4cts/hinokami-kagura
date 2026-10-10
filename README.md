@@ -1,5 +1,7 @@
 # Shrine: Cursed Technique (Forge 1.20.1)
 
+![Preview](docs/preview.png)
+
 A cursed technique of cutting and fire, inspired by the King of Curses' moves. Every effect is drawn by the
 mod's own shaders over the real frame (no Minecraft particles, no block models): cuts, flames, the domain
 and the cut through the world, with anime impact frames, title cards and cutscenes.
