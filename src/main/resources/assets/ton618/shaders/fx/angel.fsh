@@ -99,13 +99,13 @@ mat3 rotZ(float a) {
 // sword arm pose: shoulder fixed, hand sweeps from high overhead to low in front
 vec3 SHOULDER = vec3(1.15, 7.55, 0.0);
 vec3 handPos() {
-    float a = mix(-2.35, 0.95, SwordT);          // angle of the arm in the y/z plane (0 = straight forward)
+    float a = mix(-1.9, 0.95, SwordT);           // angle of the arm in the y/z plane (0 = straight forward)
     vec3 dir = normalize(vec3(-0.15, -sin(a) * 1.0, cos(a)));
     return SHOULDER + dir * 3.0;
 }
 
 vec3 swordDir() {
-    float a = mix(-2.6, 1.1, SwordT);
+    float a = mix(-1.75, 1.15, SwordT);
     return normalize(vec3(-0.1, -sin(a), cos(a)));
 }
 
@@ -305,6 +305,11 @@ void main() {
     if (bs.z < sceneT) {
         float flick = 0.7 + 0.3 * noise3(vec3(bs.y * 12.0, Time * 6.0, 0.0));
         col += vec3(1.0, 0.45, 0.08) * (exp(-bs.x / (UNIT * 0.6)) * 2.2 + exp(-bs.x / (UNIT * 2.5)) * 0.35) * flick * SwordGlow * Presence;
+        // tongues of flame streaming off the blade: noise advected away from it, thresholded into licks
+        vec3 pw = rd * bs.z;
+        float fl = fbm3(vec3(bs.y * 14.0, bs.x / UNIT * 1.8 - Time * 5.0, pw.y / UNIT * 0.6 - Time * 2.0));
+        float tongue = smoothstep(0.42, 0.75, fl + 0.35 - bs.x / (UNIT * 1.6)) * exp(-bs.x / (UNIT * 1.4));
+        col += mix(vec3(1.0, 0.25, 0.03), vec3(1.0, 0.75, 0.3), tongue) * tongue * 2.4 * SwordGlow * Presence;
     }
 
     // the slash trail: an arc of fire swept by the blade tip, lingering a moment after the blow
@@ -320,7 +325,7 @@ void main() {
             if (t > 0.0 && t < sceneT) {
                 vec3 q = rd * t - shoulderW;
                 float ang = atan(-dot(q, MY), dot(q, MZ));
-                float a0 = mix(-2.6, 1.1, 0.0), a1 = mix(-2.6, 1.1, SwordT);
+                float a0 = mix(-1.75, 1.15, -0.16), a1 = mix(-1.75, 1.15, SwordT);
                 float behind = a1 - ang;                                   // radians behind the blade
                 float inArc = smoothstep(a0 - 0.05, a0 + 0.25, ang) * smoothstep(-0.03, 0.06, behind);
                 float tail = exp(-max(behind, 0.0) * 1.6);

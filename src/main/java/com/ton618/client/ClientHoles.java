@@ -98,6 +98,11 @@ public final class ClientHoles {
             if (d < bestDist) {
                 bestDist = d;
                 best = evaluate(h, pos, now);
+                if (h.strikeKind() != StrikeKind.HOLE) {
+                    // the Sun's heat and heaven's light belong to the region of the strike, not the whole dimension
+                    float far = Mth.clamp(1f - (float) ((d - 2500.0) / 2500.0), 0f, 1f);
+                    best = new Frame(best.hole(), best.position(), best.presence() * far, best.eclipse(), best.jets(), best.approach());
+                }
             }
         }
         return best;

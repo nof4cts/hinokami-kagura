@@ -97,24 +97,35 @@ def shot(name, t):
     if name.startswith("angel"):
         body = np.array([0, ground(0, 300) + 10, 300.0])
         face = norm([0.0, 0, -1.0])
-        sword = dict(angel_raise=0.0, angel_mid=0.55, angel_slash=1.0, angel_after=1.0, angel_low=0.0)[name]
-        age = dict(angel_raise=-1.0, angel_mid=-0.3, angel_slash=0.15, angel_after=2.5, angel_low=-1.0)[name]
+        sword = dict(angel_raise=0.0, angel_mid=0.55, angel_slash=1.0, angel_after=1.0, angel_low=0.0, angel_profile=0.5)[name]
+        age = dict(angel_raise=-1.0, angel_mid=-0.3, angel_slash=0.15, angel_after=2.5, angel_low=-1.0, angel_profile=-0.2)[name]
+        if OVR.get("sword") is not None: sword = OVR["sword"]
+        if OVR.get("age") is not None: age = OVR["age"]
         cam = np.array([-160, ground(-160, -80) + 25, -80.0])
         look = body + np.array([0, 140, 0])
         if name == "angel_low":
             cam = np.array([60, ground(60, 120) + 6, 120.0])
             look = body + np.array([0, 170, 0])
+        if name == "angel_profile":
+            cam = body + np.array([350.0, 64, -110])
+            look = body + np.array([0, 84, -100.0])
         if name == "angel_after":
             cam = np.array([-260, ground(-260, 200) + 120, 200.0])
             look = np.array([0, 0, 0.0])
         u = dict(Body=body, Size=200.0, Presence=1.0, Approach=1.0, Landed=0.0, FaceDir=tuple(face), SwordT=sword,
-                 SlashAge=age, WingBeat=t, Lean=0.2 if sword >= 1 else -0.1, SwordGlow=1.5, FissureA=body + np.array([0, 0, -900]), FissureB=body + np.array([0, 0, 900]), FissureW=14.0)
+                 SlashAge=age, WingBeat=t, Lean=OVR["lean"] if OVR.get("lean") is not None else (0.2 if sword >= 1 else -0.1), SwordGlow=1.5, FissureA=body + np.array([0, 0, -900]), FissureB=body + np.array([0, 0, 900]), FissureW=14.0)
         return cam, look, 70, u
     raise SystemExit("unknown shot " + name)
 
 
+OVR = {}
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--sword", type=float)
+    ap.add_argument("--age", type=float)
+    ap.add_argument("--lean", type=float)
     ap.add_argument("out")
     ap.add_argument("--pass", dest="fx", default="sun")
     ap.add_argument("--shot", default="sun_far")
@@ -122,6 +133,7 @@ def main():
     ap.add_argument("--w", type=int, default=800)
     ap.add_argument("--h", type=int, default=450)
     a = ap.parse_args()
+    OVR.update(sword=a.sword, age=a.age, lean=a.lean)
 
     cam, look, fov, u = shot(a.shot, a.t)
     fwd, right, up = look_basis(look - cam)

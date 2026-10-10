@@ -1,36 +1,48 @@
 # TON 618 (Forge 1.20.1)
 
-An orbital railgun that drops TON 618, one of the most massive black holes known, onto your world.
-Nothing is drawn with Minecraft blocks or particles: the cannon and the Earth are raymarched in their own
-shader, the black hole is integrated per pixel through its own gravity over the real world, and the whole
-frame goes through an HDR post pipeline.
+An intergalactic railgun with three strikes: TON 618 (born from a star the beam runs through), the Sun
+itself, and an Archangel with a sword of fire. Nothing is drawn with Minecraft blocks or particles: space,
+the cannon, the Earth, the Sun and the Archangel are raymarched in their own shaders, the black hole is
+integrated per pixel through its own gravity, and every frame goes through an HDR post pipeline with
+bloom, god rays and anime impact frames.
 
-![Orbit shots](docs/orbit_preview.png)
-![Black hole](docs/stage1_preview.png)
-*(Rendered offline with the mod's actual shaders: `tools/render_orbit.py`, `tools/render_test.py`.)*
+![Strikes](docs/strikes_preview.png)
+*(Rendered offline with the mod's actual shaders: `tools/render_space.py`, `tools/render_world.py`,
+`tools/render_impact.py`, `tools/render_test.py`.)*
 
 ## How to use
 1. Get the **SS-618 Remote** (Tools & Utilities or Combat creative tab, or `/give @s ton618:remote`).
-2. Look at the ground and **use** it: the target is locked (brackets, range readout).
-3. **Use again within 5 s** to fire. **Sneak + use** cancels.
+2. **Sneak + use** (with nothing locked) to choose the strike: **TON 618**, **The Sun** or **Archangel**.
+3. Look at the ground and **use** it: the target is locked (brackets, range readout).
+4. **Use again within 5 s** to fire. **Sneak + use** cancels a lock.
 
-### What happens (19 s cutscene for everyone within 512 blocks)
-| Time | Shot |
-|---|---|
-| 0.0 s | Orbit: the railgun above the Earth; its coils wake, breech to muzzle |
-| 1.9 s | Tracking along the barrel as the charge races up it; countdown |
-| 3.5 s | Down the line of fire: the shot, the beam, the projectile falling to Earth |
-| 5.5 s | White-out into the world: from near the target, TON 618 enters the sky |
-| 9.0 s | Over the shooter's shoulder; the world darkens, the ground shakes |
-| 13.1 s | Low and close, lens tightening |
-| 15.0 s | Impact: flash, afterimage, shockwave; the camera cranes away as the world is eaten |
+Everyone within 512 blocks sees the cutscene. Hold **Shift** for a second to skip it.
 
-Hold **Shift** for a second to skip. After the cutscene the hole stays, consuming a sphere of the world
-(default radius 160) shell by shell and dragging in mobs, items and survival players, then collapses.
+### TON 618 (27 s)
+The cannon wakes far outside the Milky Way, charges, and fires. We ride the beam across the galaxy. It runs
+a star through: the star convulses, implodes in a white flash, and a black hole spins up its accretion disk
+from the star's remains. A second pulse drives it out. It falls across the galaxy, through Earth's sky, and
+onto the target. Then it eats a sphere of the world (default radius 160): blocks are torn loose and
+spiral into it, and mobs and players are dragged in slowly, harder the closer they get.
+
+### The Sun (23 s)
+The cannon seizes the Sun and tears it out of its place. It swells over the Earth until the day side cooks;
+from the ground the sky turns to fire as it comes down. It burns out a crater with a molten floor, scorches
+the land around it to blackstone and magma, and blows everything nearby away in flames.
+
+### Archangel (17 s)
+The clouds part over the target and a pillar of light comes down. The Archangel descends it, settles,
+raises a sword of fire (keyframed with anticipation, overshoot, a coil before the blow and follow-through),
+and brings it down. A rift opens through the world along the cut, from the surface into the void.
+
+### Impact frames
+Every big beat (the shot, the star pierced, the collapse, the Sun torn loose, landings, the blow) cuts to a
+stutter of stark frames: ink, negative, two-tone, halftone and white-out, with speed lines converging on
+the hit, the image torn into slices and a punch-in zoom, before the flash and the shockwave.
 
 ### Test commands (op)
-`/ton618 strike` (full sequence at the block you look at), `/ton618 drop`, `/ton618 preview [distance] [size]`,
-`/ton618 clear`.
+`/ton618 strike [hole|sun|angel]` (full sequence at the block you look at), `/ton618 drop`,
+`/ton618 preview [distance] [size]`, `/ton618 clear`.
 
 ## Config
 **Client** `config/ton618-client.toml`: `quality` LOW/MEDIUM/HIGH/ULTRA, `bloom`, `aberration`, `filmGrain`,
@@ -38,7 +50,8 @@ Hold **Shift** for a second to skip. After the cutscene the hole stays, consumin
 
 **Server** `<world>/serverconfig/ton618-server.toml`: `holeSize`, `destructionRadius`, `blocksPerTick`
 (performance budget), `consumeSeconds`, `lingerSeconds`, `destroyBlocks`, `pullEntities`, `lockRange`,
-`cooldownSeconds`, `cutsceneRadius`.
+`cooldownSeconds`, `cutsceneRadius`, `debrisPerTick`; `sunRadius`, `scorchRadius`; `angelHeight`,
+`riftLength`, `riftWidth`.
 
 ## Build
 Push to GitHub (Actions builds the jar) or run `gradlew build`. No other mods required.
